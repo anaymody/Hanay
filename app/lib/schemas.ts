@@ -28,6 +28,11 @@ export const GenerateRecipeBody = z.object({
   filters: z.array(z.string()).optional().default([]),
 });
 
+export const PostImageBody = z.object({
+  menu_item_id: uuid,
+  storage_path: z.string().min(1).max(500),
+});
+
 export const FlagBody = z.object({
   reason: z.string().max(500).optional(),
 });

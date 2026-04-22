@@ -5,8 +5,11 @@ import Link from 'next/link';
 import DishCard from './DishCard';
 import RecipeCard from './RecipeCard';
 import RecipeModal from './RecipeModal';
-import type { Hall, MealPeriod, MenuItem, Recipe } from '@/lib/types';
+import ImageModal from './ImageModal';
+import type { Hall, MealPeriod, MenuItem, MenuItemImage, Recipe } from '@/lib/types';
 import { isWeekend, mealPeriodsForDate, isHallOpen } from '@/lib/time';
+import { getSupabase } from '@/lib/supabase';
+import { compressImage } from '@/lib/imageUtils';
 
 function tagLabel(tag: string): string {
   switch (tag) {
@@ -49,6 +52,8 @@ export default function HallClient({
   const [userRatings, setUserRatings] = useState<Record<string, number>>({});
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
+  const [modalItem, setModalItem] = useState<MenuItem | null>(null);
+  const [modalImages, setModalImages] = useState<MenuItemImage[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -116,6 +121,37 @@ export default function HallClient({
         body: JSON.stringify({ menu_item_id: itemId, stars }),
       });
     });
+  };
+
+  const handleDishClick = async (item: MenuItem) => {
+    setModalItem(item);
+    try {
+      const r = await fetch(`/api/images?menu_item_id=${item.id}`, { cache: 'no-store' });
+      if (r.ok) setModalImages(await r.json());
+      else setModalImages([]);
+    } catch {
+      setModalImages([]);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!modalItem) return;
+    const compressed = await compressImage(file);
+    const path = `${modalItem.id}/${crypto.randomUUID()}.webp`;
+    const supabase = getSupabase();
+    const { error } = await supabase.storage.from('menu-images').upload(path, compressed, {
+      contentType: 'image/webp',
+    });
+    if (error) throw error;
+    const res = await fetch('/api/images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ menu_item_id: modalItem.id, storage_path: path }),
+    });
+    if (!res.ok) throw new Error('Failed to save image metadata');
+    // Refresh images
+    const r = await fetch(`/api/images?menu_item_id=${modalItem.id}`, { cache: 'no-store' });
+    if (r.ok) setModalImages(await r.json());
   };
 
   const handleGenerate = async () => {
@@ -228,6 +264,7 @@ export default function HallClient({
                     item={item}
                     userRating={userRatings[item.id] ?? null}
                     onRate={(n) => handleRate(item.id, n)}
+                    onClick={() => handleDishClick(item)}
                   />
                 ))}
               </div>
@@ -296,6 +333,15 @@ export default function HallClient({
           recipe={modalRecipe}
           hall={hall}
           onClose={() => setModalRecipe(null)}
+        />
+      )}
+
+      {modalItem && (
+        <ImageModal
+          item={modalItem}
+          images={modalImages}
+          onClose={() => { setModalItem(null); setModalImages([]); }}
+          onUpload={handleImageUpload}
         />
       )}
     </div>

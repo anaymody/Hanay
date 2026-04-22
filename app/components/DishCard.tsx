@@ -15,14 +15,16 @@ export default function DishCard({
   item,
   userRating,
   onRate,
+  onClick,
 }: {
   item: MenuItem;
   userRating: number | null;
   onRate: (n: number) => void;
+  onClick: () => void;
 }) {
   const display = userRating ?? item.avg_stars ?? 0;
   return (
-    <div className="dish-card">
+    <div className="dish-card" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div className="dish-card-img">
         <span>{item.name}</span>
         <span style={{ opacity: 0.5, fontSize: '0.6rem', marginTop: '0.3rem' }}>

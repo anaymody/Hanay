@@ -21,6 +21,12 @@ export type MenuItem = {
   rating_count: number;
 };
 
+export type MenuItemImage = {
+  id: string;
+  storage_path: string;
+  created_at: string;
+};
+
 export type Recipe = {
   id: string;
   hall_id: string;
