@@ -6,7 +6,7 @@ import DishCard from './DishCard';
 import RecipeCard from './RecipeCard';
 import RecipeModal from './RecipeModal';
 import type { Hall, MealPeriod, MenuItem, Recipe } from '@/lib/types';
-import { isWeekend, mealPeriodsForDate } from '@/lib/time';
+import { isWeekend, mealPeriodsForDate, isHallOpen } from '@/lib/time';
 
 const TODAY_LABEL = new Date().toLocaleDateString('en-US', {
   timeZone: 'America/Los_Angeles',
@@ -68,6 +68,8 @@ export default function HallClient({
 
   const hallRecipes = initialRecipes.filter((r) => r.hall_id === hall.id).slice(0, 3);
 
+  const isOpen = isHallOpen(hall);
+
   const handleRate = (itemId: string, stars: number) => {
     setUserRatings((prev) => ({ ...prev, [itemId]: stars }));
     startTransition(() => {
@@ -87,7 +89,9 @@ export default function HallClient({
           <div className="hall-hero-main">
             <div className="hall-hero-eyebrow">
               <span>Dining Hall</span>
-              <span className="hall-status-chip">Open Now</span>
+              <span className={`hall-status-chip ${!isOpen ? 'closed' : ''}`}>
+                {isOpen ? 'Open Now' : 'Closed Now'}
+              </span>
             </div>
             <div className="hall-hero-name">{hall.name}</div>
             <div className="hall-hero-meta">

@@ -1,4 +1,5 @@
 import type { MealPeriodT } from './schemas';
+import type { Hall } from './types';
 
 const TZ = 'America/Los_Angeles';
 
@@ -56,4 +57,61 @@ export function currentMealPeriod(date: Date = new Date()): MealPeriodT {
   if (hour < 11) return 'breakfast';
   if (hour < 16) return 'lunch';
   return 'dinner';
+}
+
+/**
+ * Parse a time string like "7:00 AM" into minutes since midnight.
+ */
+function parseTime(timeStr: string): number {
+  const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return 0;
+  let hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const ampm = match[3].toUpperCase();
+  if (ampm === 'PM' && hour !== 12) hour += 12;
+  if (ampm === 'AM' && hour === 12) hour = 0;
+  return hour * 60 + minute;
+}
+
+/**
+ * Check if the hall is currently open based on its hours.
+ */
+export function isHallOpen(hall: Hall, date: Date = new Date()): boolean {
+  const now = new Date(date);
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: TZ }));
+  const currentMinutes = laTime.getHours() * 60 + laTime.getMinutes();
+
+  // Halls are closed after 10 PM and before 7:30 AM
+  const closeTime = 22 * 60; // 10 PM
+  const openTime = 7 * 60 + 30; // 7:30 AM
+
+  if (currentMinutes >= closeTime || currentMinutes < openTime) {
+    return false;
+  }
+
+  const dayType = isWeekend(date) ? 'weekend' : 'weekday';
+  const hours = hall.hours[dayType];
+  if (!hours) return false;
+
+  for (const period of Object.values(hours) as string[]) {
+    if (!period) continue;
+    const parts = period.split('–');
+    if (parts.length !== 2) continue;
+    let [startStr, endStr] = parts;
+    endStr = endStr.trim();
+    startStr = startStr.trim();
+    
+    // If start doesn't have AM/PM, use the one from end
+    if (!startStr.includes('AM') && !startStr.includes('PM')) {
+      if (endStr.includes('AM')) startStr += ' AM';
+      else if (endStr.includes('PM')) startStr += ' PM';
+    }
+    
+    const startMinutes = parseTime(startStr);
+    const endMinutes = parseTime(endStr);
+    if (currentMinutes >= startMinutes && currentMinutes <= endMinutes) {
+      return true;
+    }
+  }
+  return false;
 }
