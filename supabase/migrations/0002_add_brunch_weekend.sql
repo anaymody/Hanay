@@ -7,7 +7,7 @@ UPDATE halls SET
     'weekday', jsonb_build_object(
       'breakfast', hours->>'breakfast',
       'lunch', hours->>'lunch',
-      'dinner', '5:00–10:00 PM'
+      'dinner', '4:00–10:00 PM'
     ),
     'weekend', jsonb_build_object(
       'brunch', '8:30 AM–1:00 PM',

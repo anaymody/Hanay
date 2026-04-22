@@ -35,7 +35,7 @@ export function mealPeriodsForDate(date: Date = new Date()): MealPeriodT[] {
 /**
  * Active meal period in America/Los_Angeles based on wall-clock hour.
  *
- * Weekday:  breakfast (before 11 AM), lunch (11 AM–5 PM), dinner (5 PM+)
+ * Weekday:  breakfast (before 11 AM), lunch (11 AM–4 PM), dinner (4 PM+)
  * Weekend:  brunch (before 1 PM), dinner (1 PM+)
  * All halls close at 10 PM — after that we default to the last period (dinner).
  */
@@ -54,6 +54,6 @@ export function currentMealPeriod(date: Date = new Date()): MealPeriodT {
   }
 
   if (hour < 11) return 'breakfast';
-  if (hour < 17) return 'lunch';
+  if (hour < 16) return 'lunch';
   return 'dinner';
 }

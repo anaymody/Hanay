@@ -101,7 +101,7 @@ INSERT INTO halls (name, short_name, location, active_meal_periods, venue_id, ho
     'Parkside Complex',
     ARRAY['breakfast','lunch','dinner']::meal_period[],
     'parkside',
-    '{"breakfast":"7:30–10:00 AM","lunch":"11:00 AM–2:30 PM","dinner":"5:00–9:30 PM"}'::jsonb
+    '{"breakfast":"7:30–10:00 AM","lunch":"11:00 AM–2:30 PM","dinner":"4:00–9:30 PM"}'::jsonb
   ),
   (
     'Everybody''s Kitchen',
@@ -109,7 +109,7 @@ INSERT INTO halls (name, short_name, location, active_meal_periods, venue_id, ho
     'McCarthy Quad',
     ARRAY['breakfast','lunch','dinner']::meal_period[],
     'evk',
-    '{"breakfast":"7:00–10:30 AM","lunch":"11:00 AM–3:00 PM","dinner":"4:30–9:00 PM"}'::jsonb
+    '{"breakfast":"7:00–10:30 AM","lunch":"11:00 AM–3:00 PM","dinner":"4:00–9:00 PM"}'::jsonb
   ),
   (
     'USC Village Dining Hall',
