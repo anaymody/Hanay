@@ -237,6 +237,14 @@ nav.dheli-nav {
 .meal-tab:hover { color: var(--text); }
 .meal-tab.active { color: var(--red); border-bottom-color: var(--red); }
 
+/* Menu filters */
+.menu-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
 /* Menu sections */
 .menu-section { margin-bottom: 3rem; }
 .menu-section-title {

@@ -8,6 +8,14 @@ import RecipeModal from './RecipeModal';
 import type { Hall, MealPeriod, MenuItem, Recipe } from '@/lib/types';
 import { isWeekend, mealPeriodsForDate, isHallOpen } from '@/lib/time';
 
+function tagLabel(tag: string): string {
+  switch (tag) {
+    case 'halal-ingredients': return 'Halal';
+    case 'gluten-free': return 'GF';
+    default: return tag.charAt(0).toUpperCase() + tag.slice(1);
+  }
+}
+
 const TODAY_LABEL = new Date().toLocaleDateString('en-US', {
   timeZone: 'America/Los_Angeles',
   weekday: 'long',
@@ -40,11 +48,13 @@ export default function HallClient({
   const [items, setItems] = useState<MenuItem[]>(initialItems);
   const [userRatings, setUserRatings] = useState<Record<string, number>>({});
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
+  const [activeTags, setActiveTags] = useState<Set<string>>(new Set());
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
+    setActiveTags(new Set());
     if (period === initialPeriod) {
       setItems(initialItems);
       return;
@@ -58,20 +68,44 @@ export default function HallClient({
     };
   }, [period, hall.id, initialPeriod, initialItems]);
 
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    for (const item of items) {
+      for (const t of item.tags) tagSet.add(t);
+    }
+    return Array.from(tagSet).sort();
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    if (activeTags.size === 0) return items;
+    return items.filter((item) =>
+      Array.from(activeTags).every((tag) => item.tags.includes(tag))
+    );
+  }, [items, activeTags]);
+
   const categories = useMemo(() => {
     const map: Record<string, MenuItem[]> = {};
-    for (const item of items) {
+    for (const item of filteredItems) {
       const cat = item.category ?? 'Menu';
       if (!map[cat]) map[cat] = [];
       map[cat].push(item);
     }
     return map;
-  }, [items]);
+  }, [filteredItems]);
 
   const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
   const hallRecipes = recipes.filter((r) => r.hall_id === hall.id).slice(0, 3);
 
   const isOpen = isHallOpen(hall);
+
+  const toggleTag = (tag: string) => {
+    setActiveTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  };
 
   const handleRate = (itemId: string, stars: number) => {
     setUserRatings((prev) => ({ ...prev, [itemId]: stars }));
@@ -164,6 +198,21 @@ export default function HallClient({
           ))}
         </div>
 
+        {availableTags.length > 0 && (
+          <div className="menu-filters">
+            {availableTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className={`filter-pill ${activeTags.has(tag) ? 'active' : ''}`}
+                onClick={() => toggleTag(tag)}
+              >
+                {tagLabel(tag)}
+              </button>
+            ))}
+          </div>
+        )}
+
         {Object.keys(categories).length === 0 ? (
           <p style={{ color: 'var(--muted)' }}>
             No menu yet for this meal today — check back soon.
@@ -188,7 +237,7 @@ export default function HallClient({
 
         <div className="hall-recipes-header">
           <div className="section-title">Recipes from {hall.short_name}</div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginRight: '30px' }}>
+          <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
             <button
               className={`btn btn-ai ${aiLoading ? 'loading' : ''}`}
               onClick={handleGenerate}
