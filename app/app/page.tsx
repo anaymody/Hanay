@@ -1,16 +1,12 @@
 import Link from 'next/link';
-import { getHalls } from '@/lib/fetchers';
 
-export const dynamic = 'force-dynamic';
+const HALLS = [
+  { short_name: 'Parkside', slug: 'parkside' },
+  { short_name: 'EVK', slug: 'evk' },
+  { short_name: 'Village', slug: 'village' },
+];
 
-export default async function LandingPage() {
-  let halls: Awaited<ReturnType<typeof getHalls>> = [];
-  try {
-    halls = await getHalls();
-  } catch {
-    halls = [];
-  }
-
+export default function LandingPage() {
   const today = new Date().toLocaleDateString('en-US', {
     timeZone: 'America/Los_Angeles',
     weekday: 'long',
@@ -31,11 +27,11 @@ export default async function LandingPage() {
       <div className="landing-date">{today}</div>
       <div className="landing-divider" />
       <div className="landing-halls">
-        {halls.map((h) => (
+        {HALLS.map((h) => (
           <Link
-            key={h.id}
+            key={h.slug}
             className="landing-hall-btn"
-            href={`/halls/${h.short_name.toLowerCase()}`}
+            href={`/halls/${h.slug}`}
           >
             {h.short_name}
           </Link>
