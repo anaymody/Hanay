@@ -4,15 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DHeli is a USC dining hall companion web app: daily scraped menus, anonymous 1-5 star dish ratings, and community + AI-generated recipe collection. Four Docker services: Next.js app, PostgreSQL, Supabase Realtime, and a Python scraper.
+DHeli is a USC dining hall companion web app: daily scraped menus, anonymous 1-5 star dish ratings, and community + AI-generated recipe collection. Two Docker services: Next.js app and a Python scraper. Database and realtime hosted on Supabase.
 
 ## Commands
 
 ### Development (Docker)
 
 ```bash
-docker compose up --build            # Start all services (db, app, realtime, scraper)
-docker compose down -v               # Tear down everything including database volumes
+docker compose up --build            # Start services (app, scraper)
+docker compose down                  # Tear down containers
 ```
 
 The scraper runs automatically at midnight LA time daily (via `scheduler.py`). It also runs once on startup. To trigger a manual one-off scrape:
@@ -30,20 +30,22 @@ npm run build     # Production build
 npm run lint      # ESLint via next lint
 ```
 
-### Database Reset
+### Database
 
-Migrations in `supabase/migrations/` auto-apply on first `docker compose up`. To reset: `docker compose down -v` then `docker compose up --build`.
+Database is hosted on Supabase. Migrations in `supabase/migrations/` should be run via the Supabase SQL Editor. There is no local database container.
 
 ## Architecture
 
 ```
-Browser ──HTTP/WS──▶ Next.js 14 (App Router) ──raw SQL (pg)──▶ PostgreSQL 15
+Browser ──HTTP/WS──▶ Next.js 14 (App Router) ──raw SQL (pg)──▶ Supabase PostgreSQL
                            │                                         │
-                           │ Gemini 2.5 Flash                        │ logical replication
+                           │ Gemini 2.5 Flash                        │ built-in realtime
                            ▼                                         ▼
                      Google AI API                          Supabase Realtime ──WS──▶ Browser
 
-Python Scraper (Playwright) ──INSERT──▶ PostgreSQL
+                                                            Supabase Storage ◀── Browser (image uploads)
+
+Python Scraper (Playwright) ──INSERT──▶ Supabase PostgreSQL
                             ──POST──▶ /api/recipes/generate
 ```
 
@@ -53,7 +55,7 @@ Python Scraper (Playwright) ──INSERT──▶ PostgreSQL
 - `app/lib/` — Shared utilities: db pool, session, rate limiting, Zod schemas, Gemini client, types
 - `app/components/` — React components (mix of client and server)
 - `scraper/` — Python 3.12 Playwright scraper (`scrape.py`) with daily scheduler (`scheduler.py`)
-- `supabase/migrations/` — SQL schema (mounted into Postgres on init)
+- `supabase/migrations/` — SQL schema (run via Supabase SQL Editor)
 
 ### API Routes
 
@@ -63,19 +65,22 @@ Python Scraper (Playwright) ──INSERT──▶ PostgreSQL
 - `GET /api/recipes`, `POST /api/recipes` — list/submit recipes
 - `POST /api/recipes/generate` — AI recipe generation via Gemini (`?save=true` persists)
 - `POST /api/recipes/[id]/flag` — flag recipe (auto-flags at 3 reports)
+- `GET /api/images?menu_item_id={uuid}` — list images for a menu item
+- `POST /api/images` — upload image metadata (after client-side upload to Supabase Storage)
 - `POST /api/admin/scrape` — dev-only manual menu insertion
 
 ### Data Layer
 
 - **No ORM** — raw SQL via `pg.Pool` singleton with parameterized queries (`$1`, `$2`)
 - **Session management** — anonymous httpOnly cookie (`dheli_session`), HMAC-SHA256 hashed before DB storage
-- **Rate limiting** — in-memory sliding window (Map-based), three tiers: general (60/min), ratings (10/min), generate (5/min)
+- **Rate limiting** — in-memory sliding window (Map-based), two tiers: general (60/min), generate (5/min)
 - **Rating visibility** — `avg_stars` hidden until item has 5+ ratings
 - **Meal period enum** — `'breakfast' | 'lunch' | 'dinner'`, auto-detected from LA timezone
+- **Image storage** — Supabase Storage bucket (`menu-images`), public URLs, client-side upload
 
 ### Realtime
 
-Supabase Realtime uses PostgreSQL logical replication (`wal_level=logical`) to broadcast DB changes via WebSocket. The browser-side Supabase client (`lib/supabase.ts`) subscribes; the `pg` pool handles all server-side DB access.
+Supabase Realtime (hosted) broadcasts DB changes via WebSocket. The browser-side Supabase client (`lib/supabase.ts`) subscribes; the `pg` pool handles all server-side DB access.
 
 ### Scraper Flow
 
@@ -83,4 +88,4 @@ Playwright headless Chromium navigates USC Dining site, extracts menu items from
 
 ## Environment Variables
 
-Copy `.env.example` to `.env`. Key vars: `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_SECRET`, `GEMINI_API_KEY`, `REALTIME_SECRET_KEY_BASE`, `REALTIME_JWT_SECRET`. Generate secrets with `openssl rand -hex 32`. See `ARCHITECTURE.md` in the parent directory for full reference.
+Copy `.env.example` to `.env`. Key vars: `DATABASE_URL` (Supabase PostgreSQL connection string), `SESSION_SECRET`, `ADMIN_SECRET`, `GEMINI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Generate secrets with `openssl rand -hex 32`.

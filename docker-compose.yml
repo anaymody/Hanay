@@ -1,40 +1,12 @@
 services:
-  db:
-    image: postgres:15
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: dheli
-      POSTGRES_USER: dheli
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    command:
-      - postgres
-      - -c
-      - wal_level=logical
-      - -c
-      - max_replication_slots=5
-      - -c
-      - max_wal_senders=5
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dheli -d dheli"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
   app:
     build:
       context: ./app
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://dheli:${POSTGRES_PASSWORD}@db:5432/dheli
+      NODE_OPTIONS: --dns-result-order=ipv4first
+      DATABASE_URL: ${DATABASE_URL}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       SESSION_SECRET: ${SESSION_SECRET}
       ADMIN_SECRET: ${ADMIN_SECRET}
@@ -51,47 +23,17 @@ services:
       timeout: 5s
       retries: 20
 
-  realtime:
-    image: supabase/realtime:v2.28.32
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      FLY_APP_NAME: dheli_realtime
-      PORT: 4000
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: dheli
-      DB_USER: dheli
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      DB_ENC_KEY: supabaserealtime
-      API_JWT_SECRET: ${REALTIME_JWT_SECRET}
-      SECRET_KEY_BASE: ${REALTIME_SECRET_KEY_BASE}
-      ERL_AFLAGS: "-proto_dist inet_tcp"
-      REPLICATION_MODE: RLS
-      REPLICATION_POLL_INTERVAL: "100"
-      SECURE_CHANNELS: "false"
-      TEMPORARY_SLOT: "true"
-      SLOT_NAME: supabase_realtime_rls
-      TENANT_ID: dheli
-    ports:
-      - "4000:4000"
-
   scraper:
     build:
       context: ./scraper
     restart: unless-stopped
     depends_on:
-      db:
-        condition: service_healthy
       app:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://dheli:${POSTGRES_PASSWORD}@db:5432/dheli
+      DATABASE_URL: ${DATABASE_URL}
       APP_INTERNAL_URL: http://app:3000
       ADMIN_SECRET: ${ADMIN_SECRET}
 
 volumes:
-  db_data:
   app_node_modules:
