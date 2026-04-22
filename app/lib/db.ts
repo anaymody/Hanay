@@ -9,7 +9,7 @@ export const pool: Pool =
   global.__pgPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 10,
+    max: 1,
   });
 
 if (process.env.NODE_ENV !== 'production') {
