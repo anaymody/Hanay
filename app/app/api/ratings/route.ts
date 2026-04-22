@@ -33,9 +33,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!rateLimit(req, 'ratings')) {
-    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
-  }
+
   let body: unknown;
   try {
     body = await req.json();

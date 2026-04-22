@@ -1,8 +1,7 @@
-type Preset = 'general' | 'ratings' | 'generate';
+type Preset = 'general' | 'generate';
 
 const LIMITS: Record<Preset, { max: number; windowMs: number }> = {
   general:  { max: 60, windowMs: 60_000 },
-  ratings:  { max: 10, windowMs: 60_000 },
   generate: { max: 5,  windowMs: 60_000 },
 };
 
