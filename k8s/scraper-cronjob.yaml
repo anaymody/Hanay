@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dheli-scraper
+  namespace: dheli
+spec:
+  schedule: "0 0 * * *"
+  timeZone: "America/Los_Angeles"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: dheli-scraper
+        spec:
+          containers:
+            - name: dheli-scraper
+              image: us-west2-docker.pkg.dev/YOUR_PROJECT_ID/dheli/dheli-scraper:YOUR_GIT_SHA
+              command: ["python", "-u", "scrape.py"]
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: dheli-secrets
+                      key: DATABASE_URL
+                - name: ADMIN_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: dheli-secrets
+                      key: ADMIN_SECRET
+                - name: APP_INTERNAL_URL
+                  value: "http://dheli-app.dheli.svc.cluster.local"
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "500m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "1000m"
+          restartPolicy: OnFailure

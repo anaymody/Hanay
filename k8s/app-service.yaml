@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: dheli-app
+  namespace: dheli
+  labels:
+    app: dheli-app
+spec:
+  type: ClusterIP
+  selector:
+    app: dheli-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

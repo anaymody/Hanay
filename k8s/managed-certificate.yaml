@@ -1,0 +1,9 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: dheli-certificate
+  namespace: dheli
+spec:
+  domains:
+    - your-domain.com
+    - www.your-domain.com

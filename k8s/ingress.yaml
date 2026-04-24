@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dheli-ingress
+  namespace: dheli
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "dheli-ip"
+    networking.gke.io/managed-certificates: "dheli-certificate"
+    kubernetes.io/ingress.class: "gce"
+spec:
+  defaultBackend:
+    service:
+      name: dheli-app
+      port:
+        number: 80
