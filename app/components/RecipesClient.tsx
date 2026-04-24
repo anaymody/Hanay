@@ -29,6 +29,8 @@ export default function RecipesClient({
   const [modalRecipeImages, setModalRecipeImages] = useState<RecipeImage[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modalRecipeFlagged, setModalRecipeFlagged] = useState(false);
+  const [modalFlaggedImageIds, setModalFlaggedImageIds] = useState<string[]>([]);
 
   const hallById = useMemo(() => {
     const m = new Map<string, Hall>();
@@ -116,10 +118,23 @@ export default function RecipesClient({
 
   const handleRecipeClick = async (recipe: Recipe) => {
     setModalRecipe(recipe);
+    setModalRecipeFlagged(false);
+    setModalFlaggedImageIds([]);
     try {
       const r = await fetch(`/api/recipe-images?recipe_id=${recipe.id}`, { cache: 'no-store' });
-      if (r.ok) setModalRecipeImages(await r.json());
-      else setModalRecipeImages([]);
+      const imgs = r.ok ? await r.json() : [];
+      setModalRecipeImages(imgs);
+      // Fetch flag status
+      const imageIds = imgs.map((i: { id: string }) => i.id).join(',');
+      const params = new URLSearchParams();
+      params.set('recipe_id', recipe.id);
+      if (imageIds) params.set('recipe_image_ids', imageIds);
+      const flagsRes = await fetch(`/api/flags/mine?${params}`, { cache: 'no-store' });
+      if (flagsRes.ok) {
+        const flags = await flagsRes.json();
+        setModalRecipeFlagged(flags.recipe_flagged);
+        setModalFlaggedImageIds(flags.flagged_recipe_image_ids);
+      }
     } catch {
       setModalRecipeImages([]);
     }
@@ -142,6 +157,10 @@ export default function RecipesClient({
     if (!res.ok) throw new Error('Failed to save image metadata');
     const r = await fetch(`/api/recipe-images?recipe_id=${modalRecipe.id}`, { cache: 'no-store' });
     if (r.ok) setModalRecipeImages(await r.json());
+    // Update thumbnail on the recipe card immediately
+    setRecipes((prev) =>
+      prev.map((rc) => (rc.id === modalRecipe.id ? { ...rc, thumbnail: path } : rc))
+    );
   };
 
   const hallFilters = halls.map((h) => ({
@@ -160,6 +179,8 @@ export default function RecipesClient({
           images={modalRecipeImages}
           onUpload={handleRecipeImageUpload}
           onImageRemoved={(id) => setModalRecipeImages((prev) => prev.filter((img) => img.id !== id))}
+          initialRecipeFlagged={modalRecipeFlagged}
+          initialFlaggedImageIds={modalFlaggedImageIds}
         />
       )}
       {showPost && (

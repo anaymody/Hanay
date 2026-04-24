@@ -22,21 +22,25 @@ export default function RecipeModal({
   images,
   onUpload,
   onImageRemoved,
+  initialRecipeFlagged = false,
+  initialFlaggedImageIds = [],
 }: {
   recipe: Recipe;
   hall?: Hall;
   onClose: () => void;
-  onFlag?: () => void;
+  onFlag?: (flagged: boolean) => void;
   images?: RecipeImage[];
   onUpload?: (file: File) => Promise<void>;
   onImageRemoved?: (imageId: string) => void;
+  initialRecipeFlagged?: boolean;
+  initialFlaggedImageIds?: string[];
 }) {
   const isAI = recipe.source === 'ai';
   const [imgIdx, setImgIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [recipeFlagged, setRecipeFlagged] = useState(false);
-  const [flaggedImages, setFlaggedImages] = useState<Set<string>>(new Set());
+  const [recipeFlagged, setRecipeFlagged] = useState(initialRecipeFlagged);
+  const [flaggedImages, setFlaggedImages] = useState<Set<string>>(new Set(initialFlaggedImageIds));
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasImages = images && images.length > 0;
@@ -44,7 +48,13 @@ export default function RecipeModal({
 
   async function handleImageFlag() {
     if (!currentImg) return;
-    setFlaggedImages((prev) => new Set(prev).add(currentImg.id));
+    const wasFlagged = flaggedImages.has(currentImg.id);
+    setFlaggedImages((prev) => {
+      const next = new Set(prev);
+      if (wasFlagged) next.delete(currentImg.id);
+      else next.add(currentImg.id);
+      return next;
+    });
     try {
       const r = await fetch(`/api/recipe-images/${currentImg.id}/flag`, {
         method: 'POST',
@@ -62,9 +72,10 @@ export default function RecipeModal({
     } catch {}
   }
 
-  function handleRecipeFlag() {
-    setRecipeFlagged(true);
-    onFlag?.();
+  async function handleRecipeFlag() {
+    const newState = !recipeFlagged;
+    setRecipeFlagged(newState);
+    onFlag?.(newState);
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {

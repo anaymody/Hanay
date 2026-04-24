@@ -20,7 +20,7 @@ export async function GET(
   }
   const session = getOrCreateSessionHash();
   const { rows } = await query<{ id: string }>(
-    `SELECT id FROM recipe_image_flags WHERE recipe_image_id = $1 AND session_token = $2`,
+    `SELECT id FROM menu_item_image_flags WHERE menu_item_image_id = $1 AND session_token = $2`,
     [imageId, session],
   );
   return NextResponse.json({ flagged: rows.length > 0 });
@@ -42,14 +42,14 @@ export async function POST(
 
   // Check if already flagged
   const { rows: existing } = await query<{ id: string }>(
-    `SELECT id FROM recipe_image_flags WHERE recipe_image_id = $1 AND session_token = $2`,
+    `SELECT id FROM menu_item_image_flags WHERE menu_item_image_id = $1 AND session_token = $2`,
     [imageId, session],
   );
 
   if (existing.length > 0) {
     // Unflag
     await query(
-      `DELETE FROM recipe_image_flags WHERE recipe_image_id = $1 AND session_token = $2`,
+      `DELETE FROM menu_item_image_flags WHERE menu_item_image_id = $1 AND session_token = $2`,
       [imageId, session],
     );
     return NextResponse.json({ ok: true, flagged: false, removed: false });
@@ -57,21 +57,21 @@ export async function POST(
 
   // Flag
   await query(
-    `INSERT INTO recipe_image_flags (recipe_image_id, session_token)
+    `INSERT INTO menu_item_image_flags (menu_item_image_id, session_token)
      VALUES ($1, $2)
-     ON CONFLICT (recipe_image_id, session_token) DO NOTHING`,
+     ON CONFLICT (menu_item_image_id, session_token) DO NOTHING`,
     [imageId, session],
   );
 
   const { rows } = await query<{ count: string }>(
-    `SELECT COUNT(*)::text AS count FROM recipe_image_flags WHERE recipe_image_id = $1`,
+    `SELECT COUNT(*)::text AS count FROM menu_item_image_flags WHERE menu_item_image_id = $1`,
     [imageId],
   );
   const count = Number(rows[0]?.count ?? 0);
 
   let removed = false;
   if (count >= AUTO_FLAG_THRESHOLD) {
-    await query(`DELETE FROM recipe_images WHERE id = $1`, [imageId]);
+    await query(`DELETE FROM menu_item_images WHERE id = $1`, [imageId]);
     removed = true;
   }
 

@@ -9,15 +9,20 @@ export default function ImageModal({
   images,
   onClose,
   onUpload,
+  onImageRemoved,
+  flaggedImageIds = [],
 }: {
   item: MenuItem;
   images: MenuItemImage[];
   onClose: () => void;
   onUpload: (file: File) => Promise<void>;
+  onImageRemoved?: (id: string) => void;
+  flaggedImageIds?: string[];
 }) {
   const [idx, setIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [flaggedImages, setFlaggedImages] = useState<Set<string>>(new Set(flaggedImageIds));
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasImages = images.length > 0;
@@ -28,6 +33,32 @@ export default function ImageModal({
   }
   function next() {
     setIdx((i) => (i + 1) % images.length);
+  }
+
+  async function handleImageFlag() {
+    if (!current) return;
+    const wasFlagged = flaggedImages.has(current.id);
+    setFlaggedImages((prev) => {
+      const next = new Set(prev);
+      if (wasFlagged) next.delete(current.id);
+      else next.add(current.id);
+      return next;
+    });
+    try {
+      const r = await fetch(`/api/images/${current.id}/flag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await r.json();
+      if (data.removed) {
+        onImageRemoved?.(current.id);
+        if (images.length <= 1) {
+          setIdx(0);
+        } else if (idx >= images.length - 1) {
+          setIdx(Math.max(0, idx - 1));
+        }
+      }
+    } catch {}
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -62,6 +93,14 @@ export default function ImageModal({
               src={getPublicUrl(current!.storage_path)}
               alt={item.name}
             />
+
+            <button
+              className={`image-flag-btn${flaggedImages.has(current!.id) ? ' flagged' : ''}`}
+              onClick={handleImageFlag}
+              aria-label="Flag image"
+            >
+              ⚑
+            </button>
 
             {images.length > 1 && (
               <>
