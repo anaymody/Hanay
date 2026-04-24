@@ -17,6 +17,7 @@ export default function ImageModal({
 }) {
   const [idx, setIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasImages = images.length > 0;
@@ -33,9 +34,12 @@ export default function ImageModal({
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setError(null);
     try {
       await onUpload(file);
       setIdx(0); // navigate to newest (images are newest-first)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -87,6 +91,7 @@ export default function ImageModal({
             >
               {uploading ? 'Uploading...' : '+ Upload Photo'}
             </button>
+            {error && <div className="image-modal-error">{error}</div>}
           </div>
         ) : (
           <div className="image-modal-empty">
@@ -99,6 +104,7 @@ export default function ImageModal({
             >
               {uploading ? 'Uploading...' : '+ Upload Photo'}
             </button>
+            {error && <div className="image-modal-error">{error}</div>}
           </div>
         )}
 

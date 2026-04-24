@@ -576,6 +576,12 @@ nav.dheli-nav {
   text-transform: uppercase;
   color: var(--faint);
 }
+.image-modal-error {
+  color: var(--red);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
 
 /* Post form */
 .post-form { padding: 1.5rem; }

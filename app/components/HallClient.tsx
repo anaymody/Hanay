@@ -139,10 +139,10 @@ export default function HallClient({
     const compressed = await compressImage(file);
     const path = `${modalItem.id}/${crypto.randomUUID()}.webp`;
     const supabase = getSupabase();
-    const { error } = await supabase.storage.from('menu-images').upload(path, compressed, {
+    const { error: storageError } = await supabase.storage.from('menu-images').upload(path, compressed, {
       contentType: 'image/webp',
     });
-    if (error) throw error;
+    if (storageError) throw new Error(`Storage upload failed: ${storageError.message}`);
     const res = await fetch('/api/images', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
