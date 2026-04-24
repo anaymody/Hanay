@@ -9,25 +9,25 @@ function starClass(
   userRating: number | null,
 ): string {
   if (hover > 0) {
-    return n <= hover ? 'star filled-gold' : 'star';
+    return n <= hover ? 'star filled-user' : 'star';
   }
 
   if (userRating !== null) {
     if (userRating === avgRating) {
-      return n <= userRating ? 'star filled-gold' : 'star';
+      return n <= userRating ? 'star filled-user' : 'star';
     }
     if (userRating < avgRating) {
-      if (n <= userRating) return 'star filled-gold';
-      if (n <= avgRating) return 'star filled-cardinal';
+      if (n <= userRating) return 'star filled-user';
+      if (n <= avgRating) return 'star filled-avg';
       return 'star';
     }
     // userRating > avgRating
-    if (n <= avgRating) return 'star filled-cardinal';
-    if (n <= userRating) return 'star filled-gold';
+    if (n <= avgRating) return 'star filled-avg';
+    if (n <= userRating) return 'star filled-user';
     return 'star';
   }
 
-  return n <= avgRating ? 'star filled-cardinal' : 'star';
+  return n <= avgRating ? 'star filled-avg' : 'star';
 }
 
 export default function StarRating({

@@ -11,7 +11,6 @@
   --red: #9e1b32;
   --red-light: #f3e4e7;
   --red-dim: #b82038;
-  --gold: #BF9A2F;
   --lime: #c8d44e;
   --lime-text: #3a4010;
   --shadow: 0 2px 8px rgba(60,45,20,0.07), 0 1px 2px rgba(60,45,20,0.04);
@@ -309,8 +308,8 @@ nav.dheli-nav {
   transition: color 0.1s, transform 0.1s; line-height: 1;
   background: none; border: none; padding: 0;
 }
-.star.filled-cardinal { color: var(--red); }
-.star.filled-gold { color: var(--gold); }
+.star.filled-user { color: var(--red); }
+.star.filled-avg { color: var(--text); }
 .star:hover { transform: scale(1.2); }
 .star-count { font-family: var(--font-barlow-condensed), 'Barlow Condensed', sans-serif; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); margin-left: 0.15rem; }
 
@@ -624,6 +623,20 @@ nav.dheli-nav {
 }
 .recipe-modal-upload-btn:hover { border-color: var(--red); color: var(--red); }
 .recipe-modal-upload-btn:disabled { opacity: 0.5; cursor: wait; }
+
+/* Image flag button (bottom-right of recipe photos) */
+.image-flag-btn {
+  position: absolute; bottom: 8px; right: 8px;
+  width: 26px; height: 26px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.7); cursor: pointer;
+  font-size: 0.8rem; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); transition: background 0.15s, color 0.15s;
+}
+.image-flag-btn:hover { background: rgba(255,255,255,0.9); }
+.image-flag-btn.flagged { background: var(--text); color: #fff; }
+
+/* Darkened flag button state */
+.btn-flagged { background: var(--text) !important; color: #fff !important; border-color: var(--text) !important; }
 
 /* Post form */
 .post-form { padding: 1.5rem; }

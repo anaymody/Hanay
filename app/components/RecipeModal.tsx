@@ -21,6 +21,7 @@ export default function RecipeModal({
   onFlag,
   images,
   onUpload,
+  onImageRemoved,
 }: {
   recipe: Recipe;
   hall?: Hall;
@@ -28,15 +29,43 @@ export default function RecipeModal({
   onFlag?: () => void;
   images?: RecipeImage[];
   onUpload?: (file: File) => Promise<void>;
+  onImageRemoved?: (imageId: string) => void;
 }) {
   const isAI = recipe.source === 'ai';
   const [imgIdx, setImgIdx] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [recipeFlagged, setRecipeFlagged] = useState(false);
+  const [flaggedImages, setFlaggedImages] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hasImages = images && images.length > 0;
   const currentImg = hasImages ? images[imgIdx] : null;
+
+  async function handleImageFlag() {
+    if (!currentImg) return;
+    setFlaggedImages((prev) => new Set(prev).add(currentImg.id));
+    try {
+      const r = await fetch(`/api/recipe-images/${currentImg.id}/flag`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await r.json();
+      if (data.removed) {
+        onImageRemoved?.(currentImg.id);
+        if (images && images.length <= 1) {
+          setImgIdx(0);
+        } else if (imgIdx >= (images?.length ?? 1) - 1) {
+          setImgIdx(Math.max(0, imgIdx - 1));
+        }
+      }
+    } catch {}
+  }
+
+  function handleRecipeFlag() {
+    setRecipeFlagged(true);
+    onFlag?.();
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -147,6 +176,13 @@ export default function RecipeModal({
                 src={getPublicUrl(currentImg!.storage_path)}
                 alt={recipe.title}
               />
+              <button
+                className={`image-flag-btn${flaggedImages.has(currentImg!.id) ? ' flagged' : ''}`}
+                onClick={handleImageFlag}
+                aria-label="Flag image"
+              >
+                ⚑
+              </button>
               {images.length > 1 && (
                 <>
                   <button
@@ -254,9 +290,9 @@ export default function RecipeModal({
               ))}
               {onFlag && (
                 <button
-                  className="btn btn-ghost"
+                  className={`btn btn-ghost${recipeFlagged ? ' btn-flagged' : ''}`}
                   style={{ padding: '0.3rem 0.7rem', fontSize: '0.65rem' }}
-                  onClick={onFlag}
+                  onClick={handleRecipeFlag}
                 >
                   Flag
                 </button>

@@ -74,6 +74,23 @@ export default function HallClient({
     };
   }, [period, hall.id, initialPeriod, initialItems]);
 
+  useEffect(() => {
+    if (items.length === 0) return;
+    let cancelled = false;
+    const ids = items.map((i) => i.id).join(',');
+    fetch(`/api/ratings/mine?items=${ids}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.ratings) {
+          setUserRatings((prev) => ({ ...prev, ...data.ratings }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
   const availableTags = useMemo(() => {
     const tagSet = new Set<string>();
     for (const item of items) {
@@ -153,6 +170,19 @@ export default function HallClient({
     // Refresh images
     const r = await fetch(`/api/images?menu_item_id=${modalItem.id}`, { cache: 'no-store' });
     if (r.ok) setModalImages(await r.json());
+  };
+
+  const handleRecipeFlag = async (recipe: Recipe) => {
+    const r = await fetch(`/api/recipes/${recipe.id}/flag`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const data = await r.json();
+    if (data.auto_flagged) {
+      setRecipes((prev) => prev.filter((x) => x.id !== recipe.id));
+      setModalRecipe(null);
+    }
   };
 
   const handleRecipeClick = async (recipe: Recipe) => {
@@ -367,8 +397,10 @@ export default function HallClient({
           recipe={modalRecipe}
           hall={hall}
           onClose={() => { setModalRecipe(null); setModalRecipeImages([]); }}
+          onFlag={() => handleRecipeFlag(modalRecipe)}
           images={modalRecipeImages}
           onUpload={handleRecipeImageUpload}
+          onImageRemoved={(id) => setModalRecipeImages((prev) => prev.filter((img) => img.id !== id))}
         />
       )}
 

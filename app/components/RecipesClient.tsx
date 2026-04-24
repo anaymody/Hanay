@@ -159,6 +159,7 @@ export default function RecipesClient({
           onFlag={() => handleFlag(modalRecipe)}
           images={modalRecipeImages}
           onUpload={handleRecipeImageUpload}
+          onImageRemoved={(id) => setModalRecipeImages((prev) => prev.filter((img) => img.id !== id))}
         />
       )}
       {showPost && (

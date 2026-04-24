@@ -6,7 +6,7 @@ import { RatingBody } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
 
-const VISIBILITY_THRESHOLD = 5;
+const VISIBILITY_THRESHOLD = 1;
 
 export async function GET(req: Request) {
   if (!rateLimit(req, 'general')) {

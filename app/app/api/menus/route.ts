@@ -6,7 +6,7 @@ import { laDate, currentMealPeriod } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
-const VISIBILITY_THRESHOLD = 5;
+const VISIBILITY_THRESHOLD = 1;
 
 type MenuRow = {
   id: string;

@@ -58,7 +58,7 @@ export async function getHallBySlug(slug: string): Promise<Hall | null> {
   return { id: rows[0].id, ...meta };
 }
 
-const VISIBILITY_THRESHOLD = 5;
+const VISIBILITY_THRESHOLD = 1;
 
 export async function getMenu(
   hallId: string,
