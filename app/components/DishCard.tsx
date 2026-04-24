@@ -22,7 +22,6 @@ export default function DishCard({
   onRate: (n: number) => void;
   onClick: () => void;
 }) {
-  const display = userRating ?? item.avg_stars ?? 0;
   return (
     <div className="dish-card" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div className="dish-card-img">
@@ -52,7 +51,12 @@ export default function DishCard({
               </span>
             ))}
           </div>
-          <StarRating rating={display} onRate={onRate} />
+          <StarRating
+            avgRating={Math.round(item.avg_stars ?? 0)}
+            userRating={userRating}
+            count={item.rating_count}
+            onRate={onRate}
+          />
         </div>
       </div>
     </div>
