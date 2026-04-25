@@ -3,22 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import type { Hall } from '@/lib/types';
 
-export default function Nav({ halls }: { halls: Hall[] }) {
+const HALL_TABS = [
+  { key: 'hall:parkside', href: '/halls/parkside', label: 'Parkside' },
+  { key: 'hall:evk', href: '/halls/evk', label: 'EVK' },
+  { key: 'hall:village', href: '/halls/village', label: 'Village' },
+];
+
+export default function Nav() {
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
   const itemsRef = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [indicator, setIndicator] = useState({ left: 0, width: 0, visible: false });
 
-  const items: { key: string; href: string; label: string }[] = [
-    ...halls.map((h) => ({
-      key: `hall:${h.short_name.toLowerCase()}`,
-      href: `/halls/${h.short_name.toLowerCase()}`,
-      label: h.short_name,
-    })),
-    { key: 'recipes', href: '/recipes', label: 'Recipes' },
-  ];
+  const items = [...HALL_TABS, { key: 'recipes', href: '/recipes', label: 'Recipes' }];
 
   const activeKey =
     items.find((it) => pathname === it.href || pathname.startsWith(it.href + '/'))

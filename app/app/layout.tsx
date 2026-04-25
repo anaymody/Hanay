@@ -2,7 +2,6 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Barlow, Barlow_Condensed } from 'next/font/google';
 import Nav from '@/components/Nav';
-import { getHalls } from '@/lib/fetchers';
 
 const barlow = Barlow({
   subsets: ['latin'],
@@ -28,17 +27,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let halls = [] as Awaited<ReturnType<typeof getHalls>>;
-  try {
-    halls = await getHalls();
-  } catch {
-    // DB not yet available (e.g., during first build); render shell without nav data.
-  }
   return (
     <html lang="en" className={`${barlow.variable} ${barlowCondensed.variable}`}>
       <body>
         <div id="root">
-          <Nav halls={halls} />
+          <Nav />
           {children}
         </div>
       </body>
