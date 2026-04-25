@@ -6,7 +6,7 @@ metadata:
   labels:
     app: dheli-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dheli-app
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: dheli-app
-          image: us-west2-docker.pkg.dev/YOUR_PROJECT_ID/dheli/dheli-app:YOUR_GIT_SHA
+          image: us-west2-docker.pkg.dev/dheli-494322/dheli/dheli-app:f1308ea
           ports:
             - containerPort: 3000
           env:

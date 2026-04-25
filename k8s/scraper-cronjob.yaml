@@ -18,7 +18,7 @@ spec:
         spec:
           containers:
             - name: dheli-scraper
-              image: us-west2-docker.pkg.dev/YOUR_PROJECT_ID/dheli/dheli-scraper:YOUR_GIT_SHA
+              image: us-west2-docker.pkg.dev/dheli-494322/dheli/dheli-scraper:f1308ea
               command: ["python", "-u", "scrape.py"]
               env:
                 - name: DATABASE_URL
