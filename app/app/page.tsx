@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LandingDate from '@/components/LandingDate';
 
 const HALLS = [
   { short_name: 'Parkside', slug: 'parkside' },
@@ -7,14 +8,6 @@ const HALLS = [
 ];
 
 export default function LandingPage() {
-  const today = new Date().toLocaleDateString('en-US', {
-    timeZone: 'America/Los_Angeles',
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
   return (
     <div className="landing page">
       <div className="landing-bg-text">DHELI</div>
@@ -24,7 +17,7 @@ export default function LandingPage() {
       </div>
       <div className="landing-title">DHeli</div>
       <div className="landing-sub">USC Dining — Today&apos;s menu at USC, reimagined</div>
-      <div className="landing-date">{today}</div>
+      <LandingDate />
       <div className="landing-divider" />
       <div className="landing-halls">
         {HALLS.map((h) => (

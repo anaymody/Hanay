@@ -43,10 +43,8 @@ export default function Nav() {
     return () => window.removeEventListener('resize', update);
   }, [activeKey]);
 
-  if (pathname === '/') return null;
-
   return (
-    <nav className="dheli-nav">
+    <nav className="dheli-nav" style={pathname === '/' ? { display: 'none' } : undefined}>
       <Link href="/" className="nav-logo">
         <span>DHeli</span>
       </Link>

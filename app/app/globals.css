@@ -670,6 +670,7 @@ nav.dheli-nav {
 @keyframes dot-pulse { 0%,80%,100% { transform:scale(0.6); opacity:0.4; } 40% { transform:scale(1); opacity:1; } }
 
 @media (max-width: 680px) {
+  .nav-logo { display: none; }
   .hall-body, .recipes-page { padding: 1.25rem 1rem 3rem; }
   .hall-hero { padding: 2rem 0 1.5rem; }
   .hall-hero-inner { padding: 0 1.25rem; gap: 1rem; }
